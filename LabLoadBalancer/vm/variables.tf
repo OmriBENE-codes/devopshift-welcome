@@ -3,7 +3,7 @@ variable "vm_size" {
 }
 
 variable "admin_username" {
-  default = "adminuser-omri"
+  default = "adminuser-[YOURNAME]"
 }
 
 variable "admin_password" {
