@@ -21,3 +21,21 @@ When running `main.py`, it loads the `ec2_with_alb.j2` Jinja2 template and rende
 
 ![Architecture Diagram](Terraform_Capture.PNG)
 
+Project Structure:
+
+
+├── main.py # Main deployment script using Jinja2 and python-terraform
+
+├── validate.py # Validation script using Boto3
+
+├── templates/
+
+│ └── ec2_with_alb.j2 # Jinja2 Terraform template
+
+├── terraform/ # Generated Terraform files (main.tf, outputs.tf)
+
+├── aws_validation.json # JSON output from Boto3 validation
+
+├── infra_diagram.png # (Optional) Architecture diagram
+
+└── README.md # You're reading it
