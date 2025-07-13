@@ -1,22 +1,23 @@
-Code explenation:
+# AWS EC2 + ALB Deployment using Terraform, Jinja2, and Boto3
 
-When running main.py, the file calles for ec2_with_alb.j2 a template and makes terraform file with inputs from the user.
-The code can run terraform init, plan and apply after the terraform file has been created.
-Last step for main.py is to print the outputs and errors to take care of.
+## 📄 Code Explanation
 
-validate.py - gets the outputs from the terraform file and with boto3 checks and confirmes all checks out and validated. (EC2, Load Balancer)
-then saves everything as a json.
+When running `main.py`, it loads the `ec2_with_alb.j2` Jinja2 template and renders it into a Terraform file using the inputs provided by the user or receives predefined input.
 
-______________________________________________________________________________
+- Then, it runs:
+  - `terraform init`
+  - `terraform plan`
+  - `terraform apply`
+- After deployment, it prints the Terraform output (or any errors).
 
-.
-├── main.py                   # Main deployment script using Jinja2 and python-terraform
-├── validate.py               # Validation script using Boto3
-├── templates/
-│   └── ec2_with_alb.j2       # Jinja2 Terraform template
-├── terraform/                # Generated Terraform files
-│   ├── main.tf
-│   ├── outputs.tf
-├── aws_validation.json       # JSON output from Boto3 validation
-├── infra_diagram.png         # Architecture diagram (optional)
-└── README.md
+`validate.py`:
+- Fetches Terraform output (like EC2 instance ID and ALB DNS name).
+- Uses **Boto3** to validate:
+  - EC2 instance exists and is running
+  - Load Balancer exists and is reachable
+- Saves the validation results into a file called `aws_validation.json`.
+
+---
+
+![Architecture Diagram](Terraform_Capture.PNG)
+
