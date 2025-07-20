@@ -3,18 +3,13 @@ provider "aws" {
 }
 
 variable "region" {
- default = "us-west-1"
+ default = "us-east-1"
 }
 
-variable "subnet_id" {
-    default = "subnet-06acd0b316280afeb"
-  
-}
 
 variable "ami" {
- default = "ami-061ad72bc140532fd"
-}
-
+ default = "ami-0150ccaf51ab55a51"
+ }
 variable "vm_name" {
  default = "vm-omri"
 }
@@ -30,3 +25,4 @@ variable "admin_password" {
 variable "vm_size" {
  default = "t2.micro"
 }
+

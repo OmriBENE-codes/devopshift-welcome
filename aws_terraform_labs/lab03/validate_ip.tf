@@ -1,11 +1,11 @@
 resource "time_sleep" "wait_for_ip" {
- create_duration = "1m"  # Wait for 1 minute to allow AWS to allocate the IP
+ create_duration = "2m"  # Wait for 1 minute to allow AWS to allocate the IP
 }
 
 resource "null_resource" "validate_ip" {
  provisioner "local-exec" {
    command = <<EOT
-     retries=4
+     retries=6
      interval=30
      for i in $(seq 1 $retries); do
        if [ -z "${aws_instance.vm.public_ip}" ]; then

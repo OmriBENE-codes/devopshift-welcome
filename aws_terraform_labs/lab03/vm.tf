@@ -1,25 +1,62 @@
-
 resource "aws_instance" "vm" {
-  ami           = var.ami # Amazon Linux 2 AMI in us-east-1
-  instance_type = "t2.micro"
-  subnet_id              =   var.subnet_id
-  associate_public_ip_address = true
-  vpc_security_group_ids = [aws_security_group.sg.id]
-  tags = {
-  Name = var.vm_name
+ ami                         = var.ami
+ instance_type               = var.vm_size
+ subnet_id = aws_subnet.main.id
+ vpc_security_group_ids      = [aws_security_group.sg.id]
+
+ tags = {
+   Name = var.vm_name
+ }
+
+ user_data = <<-EOF
+   #!/bin/bash
+    useradd -m -s /bin/bash ${var.admin_username}
+    echo "${var.admin_username}:${var.admin_password}" | chpasswd
+    usermod -aG wheel ${var.admin_username}
+    echo "${var.admin_username} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${var.admin_username}
+    chmod 440 /etc/sudoers.d/${var.admin_username}
+    sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sudo systemctl restart sshd
+   EOF
+
+ }
+
+ # Null Resource for Apache Installation
+resource "null_resource" "provision_apache" {
+  depends_on = [null_resource.validate_ip]
+
+  # Trigger to force rerun whenever timestamp changes
+  # This will force terraform to rerun the provisioner and update the welcome.html file if changed
+  triggers = {
+    always_run = timestamp()
   }
-  user_data = <<-EOF
-    #!/bin/bash
-        useradd -m -s /bin/bash ${var.admin_username}
-        echo "${var.admin_username}:${var.admin_password}" | chpasswd
-        usermod -aG wheel ${var.admin_username}
-        echo "${var.admin_username} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/${var.admin_username}
-        chmod 440 /etc/sudoers.d/${var.admin_username}
-        sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-        sudo sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-        sudo systemctl restart sshd
-    EOF
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo dnf update -y",
+      "sudo dnf install -y httpd",
+      "sudo systemctl enable --now httpd",  
+      "echo '<h1>Welcome to the Web Server!</h1>' | sudo tee /var/www/html/welcome.html"
+    ]
+
+    connection {
+      type     = "ssh"
+      user     = var.admin_username
+      password = var.admin_password
+      host     = aws_instance.vm.public_ip
+      timeout  = "2m"
+    }
+  }
 }
+
+
+# Updated Output for Server Information to use data source
+output "server_info" {
+  value       = "Please browse: http://${aws_instance.vm.public_ip}/welcome.html"
+  description = "Instructions to access the server, note that port 80 is currently blocked."
+}
+
 output "vm_public_ip" {
  value = aws_instance.vm.public_ip
 }
