@@ -150,7 +150,6 @@ pipeline {
                 }
             }
         }
-    }
         stage('Archive Artifacts') {
             steps {
                 dir("${PROJECT_HOME}") {
@@ -158,7 +157,7 @@ pipeline {
                         }
                     }
                 }
-            }
+    }
 
     post {
         always {
@@ -168,3 +167,4 @@ pipeline {
             }
         }
     }
+}
