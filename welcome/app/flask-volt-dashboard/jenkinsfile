@@ -19,19 +19,21 @@ pipeline {
         }
 
         stage('Build') {
-            steps {
-                script {
-                    // Call a shared library function
-                    myLibrary.buildApp()
+           steps {
+               script {
+                   // Call the mock buildApp function
+                   myLibrary.buildApp()
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    // Use another function from the shared library
-                    myLibrary.deployApp(env.BRANCH_NAME)
+               script {
+                   // If APP_DEBUG is set to 'true' set env.BRANCH_NAME to DEBUG_BRANCH
+                   env.BRANCH_NAME = env.APP_DEBUG == 'true' ? env.DEBUG_BRANCH : env.BRANCH_NAME
+                   // Call the mock deployApp function with the current branch name
+                   myLibrary.deployApp(env.BRANCH_NAME)
                 }
             }
         }
@@ -182,9 +184,9 @@ pipeline {
 
     post {
         always {
-            dir("${PROJECT_HOME}") {
-                echo 'Cleaning up workspace...'
-                sh 'rm -rf $PYENV_HOME'
+            script {
+                // Call a cleanup function from the shared library
+                myLibrary.cleanup()
             }
         }
     }
