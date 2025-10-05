@@ -13,49 +13,41 @@ pipeline {
     stages {
         stage('Clone Flask Project') {
             steps {
-                // Use the Git plugin to clone the repository
                 git branch: 'jenkins-workshop', url: 'https://github.com/yanivomc/devopshift-welcome.git'
             }
         }
 
         stage('Build') {
-           steps {
-               script {
-                   // Call the mock buildApp function
-                   myLibrary.buildApp()
+            steps {
+                script {
+                    myLibrary.buildApp()
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-               script {
-                   // If APP_DEBUG is set to 'true' set env.BRANCH_NAME to DEBUG_BRANCH
-                   env.BRANCH_NAME = env.APP_DEBUG == 'true' ? env.DEBUG_BRANCH : env.BRANCH_NAME
-                   // Call the mock deployApp function with the current branch name
-                   myLibrary.deployApp(env.BRANCH_NAME)
+                script {
+                    env.BRANCH_NAME = env.APP_DEBUG == 'true' ? env.DEBUG_BRANCH : env.BRANCH_NAME
+                    myLibrary.deployApp(env.BRANCH_NAME)
                 }
             }
         }
-    
 
         stage('Setup Python Environment and Install Dependencies') {
             steps {
                 dir("${PROJECT_HOME}") {
                     script {
-                        // Install virtualenv if not available
                         sh '''#!/bin/bash
                         if ! command -v virtualenv &> /dev/null; then
                             echo "Installing virtualenv..."
                             pip install virtualenv
                         fi
 
-                        # Delete previously built virtualenv and create a new one
                         rm -rf $PYENV_HOME
                         virtualenv $PYENV_HOME
                         source $PYENV_HOME/bin/activate
 
-                        # Install required Python packages
                         pip install -r requirements.txt
                         '''
                     }
@@ -67,7 +59,6 @@ pipeline {
             steps {
                 dir("${PROJECT_HOME}") {
                     script {
-                        // Run Flask app within the virtual environment
                         sh '''#!/bin/bash
                         source $PYENV_HOME/bin/activate
                         tasks=$(pgrep -f "flask run")
@@ -86,18 +77,17 @@ pipeline {
                 }
             }
         }
+
         stage('Parallel Tests') {
             parallel {
                 stage('Test on Chrome') {
                     steps {
                         echo 'Testing VOLT on Chrome...'
-                        // Chrome test steps here
                     }
                 }
                 stage('Test on Firefox') {
                     steps {
                         echo 'Testing VOLT on Firefox...'
-                        // Firefox test steps here
                     }
                 }
             }
@@ -106,18 +96,14 @@ pipeline {
         stage('Manual QA Approval') {
             steps {
                 script {
-                    // Wait for user interaction and store the result
                     def userInput = input message: 'Is the application running successfully?',
-                                         parameters: [choice(name: 'Proceed', choices: 'Proceed\nAbort', description: 'Choose an option')]
-                    // Set a variable based on user input
+                        parameters: [choice(name: 'Proceed', choices: 'Proceed\nAbort', description: 'Choose an option')]
                     env.USER_CHOICE = userInput
                 }
             }
         }
 
         stage('Continue the pipeline') {
-            // Run this stage ONLY! if the user chooses 'Proceed'
-
             when {
                 expression { env.USER_CHOICE == 'Proceed' }
             }
@@ -129,7 +115,6 @@ pipeline {
         }
 
         stage('Abort the Pipeline') {
-            // Run this stage ONLY! if the user chooses 'Abort'
             when {
                 expression { env.USER_CHOICE == 'Abort' }
             }
@@ -140,7 +125,6 @@ pipeline {
             }
         }
 
-        // Run this stage regardless of the user choice but we will check the user choice in the stage and print a message
         stage('Finalize the Pipeline') {
             steps {
                 script {
@@ -152,17 +136,14 @@ pipeline {
                 }
             }
         }
+
         stage('Verify Application') {
             steps {
                 dir("${PROJECT_HOME}") {
                     script {
-                        // Sleep to allow Flask to start
                         sleep 5
-
-                        // Verify Flask application is running
                         def tasks = sh(script: "pgrep -f 'flask run'", returnStatus: true) ? '' : sh(script: "pgrep -f 'flask run'", returnStdout: true).trim()
                         if (!tasks) {
-                            // Print error message and show the flask_app.log file content
                             echo "There is a problem with our flask application - printing log below"
                             sh 'cat flask_app.log'
                             error "Flask application is not running!"
@@ -173,21 +154,21 @@ pipeline {
                 }
             }
         }
-                stage('Archive Artifacts') {
+
+        stage('Archive Artifacts') {
             steps {
                 dir("${PROJECT_HOME}") {
                     archiveArtifacts artifacts: 'flask_app.log', allowEmptyArchive: true
-                        }
-                    }
                 }
+            }
+        }
     }
 
     post {
         always {
             script {
-                // Call a cleanup function from the shared library
                 myLibrary.cleanup()
             }
         }
     }
-
+}
