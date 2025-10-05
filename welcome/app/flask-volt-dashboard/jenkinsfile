@@ -37,14 +37,6 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            script {
-                // Call a cleanup function from the shared library
-                myLibrary.cleanup()
-            }
-        }
-
         stage('Setup Python Environment and Install Dependencies') {
             steps {
                 dir("${PROJECT_HOME}") {
